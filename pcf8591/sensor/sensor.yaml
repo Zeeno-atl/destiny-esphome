@@ -1,0 +1,10 @@
+platform: custom
+lambda: |-
+  auto CustomPCF = new PCF8591();
+  App.register_component(CustomPCF);
+  return CustomPCF->adc;
+sensors:
+  - name: ${pcf8591_adc0}
+  - name: ${pcf8591_adc1}
+  - name: ${pcf8591_adc2}
+  - name: ${pcf8591_adc3}

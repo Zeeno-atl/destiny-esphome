@@ -1,0 +1,28 @@
+substitutions:
+  esphome_name: first
+  wifi_ip: 192.168.0.10
+  pcf8591_adc0: My super sensor 0
+  pcf8591_adc1: My super sensor 1
+  pcf8591_adc2: My super sensor 2
+  pcf8591_adc3: My super sensor 3
+
+<<: !include common.yaml
+
+esphome:
+  <<: !include common/esphome.yaml
+  <<: !include pcf8591/esphome.yaml
+
+sensor:
+  <<: !include_dir_list common/sensors/
+  <<: !include_dir_list pcf8591/sensors/
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D3
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "GAS sensor mq-2"
+    device_class: gas

@@ -1,0 +1,48 @@
+substitutions:
+  esphome_name: ${esphome_name}
+  wifi_ip: ${wifi_ip}
+  pcf8591_adc0: MQ-2
+  pcf8591_adc1: MQ-4
+  pcf8591_adc2: MQ-6
+  pcf8591_adc3: -unused-
+
+<<: !include common.yaml
+
+esphome:
+  <<: !include common/esphome.yaml
+  <<: !include pcf8591/esphome.yaml
+
+sensor:
+  <<: !include_dir_list common/sensors/
+  <<: !include_dir_list pcf8591/sensors/
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: D5
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "MQ-2 Alarm"
+    device_class: gas
+  
+  - platform: gpio
+    pin:
+      number: D6
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "MQ-4 Alarm"
+    device_class: gas
+  
+  - platform: gpio
+    pin:
+      number: D7
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "MQ-6 Alarm"
+    device_class: gas

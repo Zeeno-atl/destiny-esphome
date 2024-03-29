@@ -1,0 +1,4 @@
+libraries:
+  - "Wire"
+includes:
+  - pcf8591/pcf8591.h
