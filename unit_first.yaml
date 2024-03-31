@@ -13,8 +13,8 @@ esphome:
   <<: !include pcf8591/esphome.yaml
 
 sensor:
-  <<: !include_dir_list common/sensors/
-  <<: !include_dir_list pcf8591/sensors/
+  <<: !include_dir_list common/sensor/
+  <<: !include_dir_list pcf8591/sensor/
 
 binary_sensor:
   - platform: gpio

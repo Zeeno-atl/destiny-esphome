@@ -1,6 +1,7 @@
 platform: copy # Reports the WiFi signal strength in %
-source_id: wifi_signal_db
-name: "WiFi Signal Percent"
+source_id: wifi_signal_db_${esphome_name}
+id: wifi_signal_percent_${esphome_name}
+name: "Wifi strenght ${esphome_name}"
 filters:
   - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
 unit_of_measurement: "Signal %"

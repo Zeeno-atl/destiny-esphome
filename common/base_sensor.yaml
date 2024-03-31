@@ -1,11 +1,12 @@
-substitutions:
-  esphome_name: ${esphome_name}
-
 esphome:
-  <<: !include common/esphome.yaml
+  name: ${esphome_name}
   
 esp8266:
   board: d1_mini
+
+# We use static IP
+mdns:
+  disabled: true
 
 # Enable logging
 logger:
@@ -34,5 +35,4 @@ wifi:
 
 captive_portal:
 
-sensor:
-  <<: !include_dir_list common/sensor/
+sensor: !include_dir_list sensor/

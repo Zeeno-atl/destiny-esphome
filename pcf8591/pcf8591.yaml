@@ -1,0 +1,7 @@
+esphome:
+  libraries:
+    - "Wire"
+  includes:
+    - pcf8591/pcf8591.h
+
+sensor: !include_dir_list sensor/

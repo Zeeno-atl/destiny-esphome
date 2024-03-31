@@ -6,15 +6,9 @@ substitutions:
   pcf8591_adc2: MQ-6
   pcf8591_adc3: -unused-
 
-<<: !include common.yaml
-
-esphome:
-  <<: !include common/esphome.yaml
-  <<: !include pcf8591/esphome.yaml
-
-sensor:
-  <<: !include_dir_list common/sensors/
-  <<: !include_dir_list pcf8591/sensors/
+packages:
+  common: !include common/base_sensor.yaml
+  ad: !include pcf8591/pcf8591.yaml
 
 binary_sensor:
   - platform: gpio
@@ -23,8 +17,8 @@ binary_sensor:
       inverted: true
       mode:
         input: true
-        pullup: true
-    name: "MQ-2 Alarm"
+        pullup: false
+    name: "MQ-2 Alarm ${esphome_name}"
     device_class: gas
   
   - platform: gpio
@@ -33,8 +27,8 @@ binary_sensor:
       inverted: true
       mode:
         input: true
-        pullup: true
-    name: "MQ-4 Alarm"
+        pullup: false
+    name: "MQ-4 Alarm ${esphome_name}"
     device_class: gas
   
   - platform: gpio
@@ -43,6 +37,6 @@ binary_sensor:
       inverted: true
       mode:
         input: true
-        pullup: true
-    name: "MQ-6 Alarm"
+        pullup: false
+    name: "MQ-6 Alarm ${esphome_name}"
     device_class: gas

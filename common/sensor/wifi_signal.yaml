@@ -1,5 +1,5 @@
 platform: wifi_signal # Reports the WiFi signal strength/RSSI in dB
-name: "WiFi Signal dB"
-id: wifi_signal_db
+name: "Wifi ${esphome_name}"
+id: wifi_signal_db_${esphome_name}
 update_interval: 10s
 entity_category: "diagnostic"
