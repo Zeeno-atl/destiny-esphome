@@ -3,4 +3,30 @@ substitutions:
   wifi_ip: 192.168.0.13
 
 packages:
-  gas_sensor: !include common_gas_sensor.yaml
+  common: !include common/base_sensor.yaml
+
+sensor:
+  - platform: rotary_encoder
+    id: anchor_chain_counter
+    name: "Anchor chain counter"
+    publish_initial_value: true
+    pin_a:
+      number: D3
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    pin_b:
+      number: D4
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+
+  - platform: template
+    name: "Anchor chain length"
+    id: anchor_chain_length
+    unit_of_measurement: m
+    accuracy_decimals: 2
+    lambda: |-
+      return id(anchor_chain_counter).state * 0.43;

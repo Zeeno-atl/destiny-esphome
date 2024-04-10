@@ -1,6 +1,0 @@
-substitutions:
-  esphome_name: unit_delta
-  wifi_ip: 192.168.0.14
-
-packages:
-  gas_sensor: !include common_gas_sensor.yaml
