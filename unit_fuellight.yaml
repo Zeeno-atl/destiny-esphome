@@ -1,0 +1,77 @@
+substitutions:
+  esphome_name: fuellight
+  wifi_ip: 192.168.0.22
+
+packages:
+  common: !include common/base_sensor.yaml
+
+switch:
+  - platform: gpio
+    name: "Pump down"
+    id: fuellight_pump_down
+    pin:
+      number: D2
+      inverted: true
+      mode: OUTPUT_OPEN_DRAIN
+    interlock: [fuellight_pump_up]
+    interlock_wait_time: 1s
+    
+  - platform: gpio
+    name: "Pump up"
+    id: fuellight_pump_up
+    pin:
+      number: D1
+      inverted: true
+      mode: OUTPUT_OPEN_DRAIN
+    interlock: [fuellight_pump_down]
+    interlock_wait_time: 1s
+
+# base offset for the pump is 5s to fill the pipe
+
+api:
+  services:
+    - service: pump_1l
+      then:
+        - switch.turn_on: fuellight_pump_down
+        - delay: 11s
+        - switch.turn_off: fuellight_pump_down
+        - delay: 1s
+        - switch.turn_on: fuellight_pump_up
+        - delay: 5s
+        - switch.turn_off: fuellight_pump_up
+    - service: pump_5l
+      then:
+        - switch.turn_on: fuellight_pump_down
+        - delay: 65s
+        - switch.turn_off: fuellight_pump_down
+        - delay: 1s
+        - switch.turn_on: fuellight_pump_up
+        - delay: 5s
+        - switch.turn_off: fuellight_pump_up
+    - service: pump_10l
+      then:
+        - switch.turn_on: fuellight_pump_down
+        - delay: 125s
+        - switch.turn_off: fuellight_pump_down
+        - delay: 1s
+        - switch.turn_on: fuellight_pump_up
+        - delay: 5s
+        - switch.turn_off: fuellight_pump_up
+    - service: pump_20l
+      then:
+        - switch.turn_on: fuellight_pump_down
+        - delay: 245s
+        - switch.turn_off: fuellight_pump_down
+        - delay: 1s
+        - switch.turn_on: fuellight_pump_up
+        - delay: 5s
+        - switch.turn_off: fuellight_pump_up
+    - service: pump_30l
+      then:
+        - switch.turn_on: fuellight_pump_down
+        - delay: 365s
+        - switch.turn_off: fuellight_pump_down
+        - delay: 1s
+        - switch.turn_on: fuellight_pump_up
+        - delay: 5s
+        - switch.turn_off: fuellight_pump_up

@@ -1,0 +1,23 @@
+substitutions:
+  esphome_name: unit_compass
+  wifi_ip: 192.168.0.16
+
+packages:
+  common: !include common/base_sensor.yaml
+
+i2c:
+
+sensor:
+  - platform: qmc5883l
+    address: 0x0D
+    field_strength_x:
+      name: "QMC5883L Field Strength X"
+    field_strength_y:
+      name: "QMC5883L Field Strength Y"
+    field_strength_z:
+      name: "QMC5883L Field Strength Z"
+    heading:
+      name: "QMC5883L Heading"
+    range: 200uT
+    oversampling: 512x
+    update_interval: 1s

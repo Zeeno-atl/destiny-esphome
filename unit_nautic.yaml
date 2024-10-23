@@ -1,0 +1,79 @@
+substitutions:
+  esphome_name: nautic
+  wifi_ip: 192.168.0.30
+
+packages:
+  common: !include common/base_sensor.yaml
+
+switch:
+
+  - platform: gpio
+    name: "Green"
+    id: nautic_green
+    pin:
+      number: D0
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF
+  
+  - platform: gpio
+    name: "Red"
+    id: nautic_red
+    pin:
+      number: D1
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "White"
+    id: nautic_white
+    pin:
+      number: D2
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "Mast green"
+    id: nautic_mgreen
+    pin:
+      number: D3
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "Mast red"
+    id: nautic_mred
+    pin:
+      number: D4
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "Horn"
+    id: nautic_horn
+    pin:
+      number: D5
+      inverted: true
+      mode: OUTPUT
+
+  - platform: gpio
+    name: "Steaming"
+    id: nautic_steaming
+    pin:
+      number: D6
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "Anchor"
+    id: nautic_anchor
+    pin:
+      number: D7
+      inverted: true
+      mode: OUTPUT
+    restore_mode: RESTORE_DEFAULT_OFF

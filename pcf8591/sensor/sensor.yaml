@@ -5,6 +5,14 @@ lambda: |-
   return {CustomPCF->adc.begin(), CustomPCF->adc.end()};
 sensors:
   - name: ${pcf8591_adc0}_${esphome_name}
+    state_class: "measurement"
+    device_class: "AQI"
   - name: ${pcf8591_adc1}_${esphome_name}
+    state_class: "measurement"
+    device_class: "AQI"
   - name: ${pcf8591_adc2}_${esphome_name}
+    state_class: "measurement"
+    device_class: "AQI"
   - name: ${pcf8591_adc3}_${esphome_name}
+    state_class: "measurement"
+    device_class: "AQI"

@@ -1,0 +1,44 @@
+substitutions:
+  esphome_name: waterlevel
+  wifi_ip: 192.168.0.23
+
+packages:
+  common: !include common/base_sensor.yaml
+
+sensor:
+
+  - platform: ultrasonic
+    trigger_pin: D1
+    echo_pin: D2
+    name: "Water distance"
+    id: water_distance
+    update_interval: 1s
+    on_value:
+      then:
+        - component.update: water_level
+  
+  - platform: template
+    name: "Water level"
+    id: water_level
+    unit_of_measurement: cm
+    accuracy_decimals: 1
+    # min level = 5cm
+    # upper level = 7cm
+    # absolute range = 92cm
+    lambda: |-
+      return std::max<double>(80 - (id(water_distance).state * 100 - 7), 0.0);
+    filters:    
+      - median:
+          window_size: 20
+          send_every: 5
+    on_value:
+      then:
+        - component.update: water_level_percentage
+  
+  - platform: template
+    name: "Water level percentage"
+    id: water_level_percentage
+    unit_of_measurement: "%"
+    accuracy_decimals: 1
+    lambda: |-
+      return (id(water_level).state / 80) * 100;

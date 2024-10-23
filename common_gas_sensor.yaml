@@ -20,6 +20,8 @@ binary_sensor:
         pullup: false
     name: "MQ-2 Alarm ${esphome_name}"
     device_class: gas
+    filters:
+      - delayed_on_off: 1s
   
   - platform: gpio
     pin:
@@ -30,6 +32,8 @@ binary_sensor:
         pullup: false
     name: "MQ-4 Alarm ${esphome_name}"
     device_class: gas
+    filters:
+      - delayed_on_off: 1s
   
   - platform: gpio
     pin:
@@ -40,3 +44,5 @@ binary_sensor:
         pullup: false
     name: "MQ-6 Alarm ${esphome_name}"
     device_class: gas
+    filters:
+      - delayed_on_off: 1s

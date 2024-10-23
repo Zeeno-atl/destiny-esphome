@@ -1,0 +1,143 @@
+substitutions:
+  esphome_name: batteries
+  wifi_ip: 192.168.0.14
+
+packages:
+  common: !include common/base_sensor.yaml
+
+i2c:
+
+ads1115:
+  - address: 0x48
+
+sensor:
+  - platform: ads1115
+    multiplexer: 'A0_GND'
+    gain: 4.096
+    name: "12V branch raw"
+    id: voltage_12_raw
+    update_interval: 100ms
+    filters:
+      - calibrate_polynomial:
+          degree: 1
+          datapoints:
+            - 0.0 -> 0.0
+            - 0.508 -> 11.47
+      - exponential_moving_average:
+          send_every: 10
+    on_value:
+      then:
+        - component.update: battery_12v
+        - component.update: battery_24v
+        - component.update: battery_36v
+        - component.update: battery_48v
+
+  - platform: ads1115
+    multiplexer: 'A1_GND'
+    gain: 4.096
+    name: "24V branch raw"
+    id: voltage_24_raw
+    update_interval: 100ms
+    filters:
+      - calibrate_polynomial:
+          degree: 1
+          datapoints:
+            - 0.0 -> 0.0
+            - 1.0165 -> 23.0
+      - exponential_moving_average:
+          send_every: 10
+    on_value:
+      then:
+        - component.update: battery_24v
+        - component.update: battery_36v
+        - component.update: battery_48v
+    
+  - platform: ads1115
+    multiplexer: 'A2_GND'
+    gain: 4.096
+    name: "36V branch raw"
+    id: voltage_36_raw
+    update_interval: 100ms
+    filters:
+      - calibrate_polynomial:
+          degree: 1
+          datapoints:
+            - 0.0 -> 0.0
+            - 1.544 -> 34.7
+      - exponential_moving_average:
+          send_every: 10
+    on_value:
+      then:
+        - component.update: battery_36v
+        - component.update: battery_48v
+  
+  - platform: ads1115
+    multiplexer: 'A3_GND'
+    gain: 4.096
+    name: "48V branch raw"
+    id: voltage_48_raw
+    update_interval: 100ms
+    filters:
+      - calibrate_polynomial:
+          degree: 1
+          datapoints:
+            - 0.0 -> 0.0
+            - 1.9898 -> 46.3
+      - exponential_moving_average:
+          send_every: 10
+    on_value:
+      then:
+        - component.update: battery_48v
+
+
+  - platform: template
+    name: "Battery 12V"
+    id: battery_12v
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    lambda: |-
+      return id(voltage_12_raw).state;
+    filters:
+      - exponential_moving_average:
+          send_every: 2
+          send_first_at: 2
+          alpha: 0.1
+  
+  - platform: template
+    name: "Battery 24V"
+    id: battery_24v
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    lambda: |-
+      return id(voltage_24_raw).state - id(battery_12v).state;
+    filters:
+      - exponential_moving_average:
+          send_every: 4
+          send_first_at: 4
+          alpha: 0.1
+  
+  - platform: template
+    name: "Battery 36V"
+    id: battery_36v
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    lambda: |-
+      return id(voltage_36_raw).state - id(battery_24v).state - id(battery_12v).state;
+    filters:
+      - exponential_moving_average:
+          send_every: 6
+          send_first_at: 6
+          alpha: 0.1
+  
+  - platform: template
+    name: "Battery 48V"
+    id: battery_48v
+    unit_of_measurement: V
+    accuracy_decimals: 2
+    lambda: |-
+      return id(voltage_48_raw).state - id(battery_36v).state - id(battery_24v).state - id(battery_12v).state;
+    filters:
+      - exponential_moving_average:
+          send_every: 8
+          send_first_at: 8
+          alpha: 0.1

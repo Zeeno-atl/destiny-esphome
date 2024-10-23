@@ -1,0 +1,61 @@
+substitutions:
+  esphome_name: cock_wheel
+  wifi_ip: 192.168.0.25
+
+packages:
+  common: !include common/base_sensor.yaml
+
+switch:
+  - platform: gpio
+    pin: D6
+    name: "Cockpit alarm"
+    id: cockpit_alarm
+
+light:
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812X
+    pin: D7
+    num_leds: 9
+    name: "Compass light"
+    id: compass_led_strip
+    restore_mode: RESTORE_DEFAULT_OFF
+
+text_sensor:  
+  - platform: homeassistant
+    id: assistant_mode
+    entity_id: input_select.assistant_mode
+
+sensor:
+  - platform: homeassistant
+    id: current_deviation
+    entity_id: sensor.current_deviation
+
+  - platform: homeassistant
+    id: assist_deviation_alarm
+    entity_id: input_number.assist_deviation_alarm
+
+
+interval:
+  - interval: 3s
+    then:
+      - lambda: |-
+          if (id(assistant_mode).state != "Direction alarm") {
+            return;
+          }
+
+          if(id(current_deviation).state > id(assist_deviation_alarm).state) {
+            // Single beep
+            id(cockpit_alarm).turn_on();
+            delay(100);
+            id(cockpit_alarm).turn_off();
+          } else if (id(current_deviation).state < -id(assist_deviation_alarm).state) {
+            // Double beep
+            id(cockpit_alarm).turn_on();
+            delay(100);
+            id(cockpit_alarm).turn_off();
+            delay(100);
+            id(cockpit_alarm).turn_on();
+            delay(100);
+            id(cockpit_alarm).turn_off();
+          }

@@ -22,6 +22,13 @@ sensor:
       mode:
         input: true
         pullup: true
+    on_clockwise:
+      then:
+        - component.update: anchor_chain_length
+    on_anticlockwise:
+      then:
+        - component.update: anchor_chain_length
+    restore_mode: ALWAYS_ZERO
 
   - platform: template
     name: "Anchor chain length"
@@ -30,3 +37,66 @@ sensor:
     accuracy_decimals: 2
     lambda: |-
       return id(anchor_chain_counter).state * 0.43;
+    on_value_range:
+      - below: 1
+        then:
+          - switch.turn_off: anchor_up_relay
+      - above: 100
+        then:
+          - switch.turn_off: anchor_down_relay
+
+api:
+  services:
+    - service: reset_anchor_chain_counter
+      then:
+        sensor.rotary_encoder.set_value:
+          id: anchor_chain_counter
+          value: 0
+
+    - service: stop_anchor
+      then:
+        - switch.turn_off: anchor_up_relay
+        - switch.turn_off: anchor_down_relay
+
+switch:
+  - platform: gpio
+    name: "Disable down"
+    id: disable_anchor_down_relay
+    pin:
+      number: D6
+      inverted: true
+      mode: OUTPUT
+    
+  - platform: gpio
+    name: "Down"
+    id: anchor_down_relay
+    interlock: [ disable_anchor_down_relay, anchor_up_relay ]
+    interlock_wait_time: 100ms
+    pin:
+      number: D7
+      inverted: true
+      mode: OUTPUT
+    on_turn_on:
+      - delay: 5s
+      - switch.turn_off: anchor_down_relay
+
+  - platform: gpio
+    name: "Disable up"
+    id: disable_anchor_up_relay
+    pin:
+      number: D0
+      inverted: true
+      mode: OUTPUT
+
+  - platform: gpio
+    name: "Up"
+    id: anchor_up_relay
+    interlock: [ disable_anchor_up_relay, anchor_down_relay ]
+    interlock_wait_time: 100ms
+    pin:
+      number: D5
+      inverted: true
+      mode: OUTPUT
+    on_turn_on:
+      - delay: 5s
+      - switch.turn_off: anchor_up_relay

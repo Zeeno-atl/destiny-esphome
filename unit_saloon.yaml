@@ -1,0 +1,371 @@
+substitutions:
+  esphome_name: saloon
+  wifi_ip: 192.168.0.24
+
+packages:
+  common: !include common/base_sensor.yaml
+
+globals:
+  - id: display_mode
+    type: int
+    restore_value: no
+    initial_value: '0'  # Modes: 0 = Water Level, 1 = Battery Levels
+  - id: display_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: green_leds_global
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: num_leds_battery_1
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: num_leds_battery_2
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: num_leds_battery_3
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: num_leds_battery_4
+    type: int
+    restore_value: no
+    initial_value: '0'
+
+output:
+  - platform: esp8266_pwm
+    pin: D5
+    frequency: 1000 Hz
+    id: saloon_main_pwm
+
+sensor:
+  - platform: homeassistant
+    name: "Water Level Percentage"
+    entity_id: sensor.water_level_percentage
+    id: water_level_percentage_subscribed
+
+  - platform: homeassistant
+    id: battery_12v_percentage
+    entity_id: sensor.battery_12v_percentage
+
+  - platform: homeassistant
+    id: battery_24v_percentage
+    entity_id: sensor.battery_24v_percentage
+
+  - platform: homeassistant
+    id: battery_36v_percentage
+    entity_id: sensor.battery_36v_percentage
+
+  - platform: homeassistant
+    id: battery_48v_percentage
+    entity_id: sensor.battery_48v_percentage
+
+light:
+  - platform: monochromatic
+    name: "Saloon main light"
+    id: saloon_main_light
+    output: saloon_main_pwm
+
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812X
+    pin: D1
+    num_leds: 102  # Adjusted for separator LEDs
+    name: "Saloon main LED strip"
+    id: saloon_main_led_strip
+    default_transition_length: 0s  # Prevent fading
+    effects:
+      - addressable_color_wipe:
+          name: Alarm effect
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 5
+              gradient: true
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 10
+          add_led_interval: 50ms
+          reverse: false
+      - addressable_twinkle:
+          name: Stars effect
+      - addressable_flicker:
+          name: Rain effect
+          update_interval: 16ms
+          intensity: 15%
+
+binary_sensor:
+  - platform: gpio
+    pin: D2
+    name: "Saloon PIR"
+    device_class: motion
+
+  - platform: gpio
+    pin:
+      number: D6
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "Saloon main light switch"
+    id: saloon_main_switch
+    on_press:
+      then:
+        - light.turn_on: saloon_main_light
+    on_release:
+      then:
+        - light.turn_off: saloon_main_light
+
+  - platform: gpio
+    pin:
+      number: D7
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    name: "Mode switch"
+    id: mode_switch
+    on_press:
+      then:
+        - lambda: |-
+            id(display_mode) = (id(display_mode) + 1) % 2;  // Cycle through modes
+            ESP_LOGD("main", "Display mode changed to %d", id(display_mode));
+            id(display_active) = true;
+        - script.execute: update_display
+    on_release:
+      then:
+        - lambda: |-
+            id(display_active) = false;
+            ESP_LOGD("main", "Display deactivated");
+        - light.turn_off: saloon_main_led_strip
+
+script:
+  - id: update_display
+    then:
+      - if:
+          condition:
+            lambda: 'return id(display_active);'
+          then:
+            - if:
+                condition:
+                  lambda: 'return id(display_mode) == 0;'
+                then:
+                  - script.execute: show_water_level
+                else:
+                  - script.execute: show_battery_levels
+
+  - id: show_water_level
+    then:
+      - light.turn_on:
+          id: saloon_main_led_strip
+          brightness: 100%
+      - light.addressable_set:
+          id: saloon_main_led_strip
+          range_from: 0
+          range_to: 101  # Total LEDs minus one
+          red: 100%
+          green: 0%
+          blue: 0%
+      - if:
+          condition:
+            lambda: 'return isnan(id(water_level_percentage_subscribed).state);'
+          then:
+            # If water level is NaN, set all LEDs to yellow
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 0
+                range_to: 101
+                red: 100%
+                green: 100%
+                blue: 0%
+          else:
+            # Calculate the number of green LEDs
+            - lambda: |-
+                int num_leds = 102;
+                float water_level = id(water_level_percentage_subscribed).state;
+                int green_leds = (water_level / 100.0) * num_leds;
+                id(green_leds_global) = green_leds;
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 0
+                range_to: !lambda "return id(green_leds_global) - 1;"
+                red: 0%
+                green: 100%
+                blue: 0%
+
+  - id: show_battery_levels
+    then:
+      - light.turn_on:
+          id: saloon_main_led_strip
+          brightness: 100%
+      - light.addressable_set:
+          id: saloon_main_led_strip
+          range_from: 0
+          range_to: 101
+          red: 0%
+          green: 0%
+          blue: 0%
+      # Add blue separator LEDs
+      - light.addressable_set:
+          id: saloon_main_led_strip
+          range_from: 24
+          range_to: 24
+          red: 0%
+          green: 0%
+          blue: 100%
+      - light.addressable_set:
+          id: saloon_main_led_strip
+          range_from: 49
+          range_to: 49
+          red: 0%
+          green: 0%
+          blue: 100%
+      - light.addressable_set:
+          id: saloon_main_led_strip
+          range_from: 74
+          range_to: 74
+          red: 0%
+          green: 0%
+          blue: 100%
+      # Battery 1 (12V)
+      - script.execute: show_battery_1
+      # Battery 2 (24V)
+      - script.execute: show_battery_2
+      # Battery 3 (36V)
+      - script.execute: show_battery_3
+      # Battery 4 (48V)
+      - script.execute: show_battery_4
+
+  - id: show_battery_1
+    then:
+      - if:
+          condition:
+            lambda: 'return !isnan(id(battery_12v_percentage).state);'
+          then:
+            - lambda: |-
+                int start_led = 0;
+                int end_led = 23;  // LEDs 0 to 23 (24 LEDs)
+                int section_leds = end_led - start_led + 1;
+                float battery_percentage = id(battery_12v_percentage).state;
+                int num_leds = (battery_percentage / 100.0) * section_leds;
+                id(num_leds_battery_1) = num_leds;
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 0
+                range_to: !lambda "return id(num_leds_battery_1) - 1;"
+                red: 0%
+                green: 100%
+                blue: 0%
+          else:
+            # If NaN, set the whole section to yellow
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 0
+                range_to: 23
+                red: 100%
+                green: 100%
+                blue: 0%
+
+  - id: show_battery_2
+    then:
+      - if:
+          condition:
+            lambda: 'return !isnan(id(battery_24v_percentage).state);'
+          then:
+            - lambda: |-
+                int start_led = 25;  // Start after separator
+                int end_led = 48;    // LEDs 25 to 48 (24 LEDs)
+                int section_leds = end_led - start_led + 1;
+                float battery_percentage = id(battery_24v_percentage).state;
+                int num_leds = (battery_percentage / 100.0) * section_leds;
+                id(num_leds_battery_2) = num_leds;
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 25
+                range_to: !lambda "return 25 + id(num_leds_battery_2) - 1;"
+                red: 0%
+                green: 100%
+                blue: 0%
+          else:
+            # If NaN, set the whole section to yellow
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 25
+                range_to: 48
+                red: 100%
+                green: 100%
+                blue: 0%
+
+  - id: show_battery_3
+    then:
+      - if:
+          condition:
+            lambda: 'return !isnan(id(battery_36v_percentage).state);'
+          then:
+            - lambda: |-
+                int start_led = 50;  // Start after separator
+                int end_led = 73;    // LEDs 50 to 73 (24 LEDs)
+                int section_leds = end_led - start_led + 1;
+                float battery_percentage = id(battery_36v_percentage).state;
+                int num_leds = (battery_percentage / 100.0) * section_leds;
+                id(num_leds_battery_3) = num_leds;
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 50
+                range_to: !lambda "return 50 + id(num_leds_battery_3) - 1;"
+                red: 0%
+                green: 100%
+                blue: 0%
+          else:
+            # If NaN, set the whole section to yellow
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 50
+                range_to: 73
+                red: 100%
+                green: 100%
+                blue: 0%
+
+  - id: show_battery_4
+    then:
+      - if:
+          condition:
+            lambda: 'return !isnan(id(battery_48v_percentage).state);'
+          then:
+            - lambda: |-
+                int start_led = 75;  // Start after separator
+                int end_led = 101;   // LEDs 75 to 101 (27 LEDs)
+                int section_leds = end_led - start_led + 1;
+                float battery_percentage = id(battery_48v_percentage).state;
+                int num_leds = (battery_percentage / 100.0) * section_leds;
+                id(num_leds_battery_4) = num_leds;
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 75
+                range_to: !lambda "return 75 + id(num_leds_battery_4) - 1;"
+                red: 0%
+                green: 100%
+                blue: 0%
+          else:
+            # If NaN, set the whole section to yellow
+            - light.addressable_set:
+                id: saloon_main_led_strip
+                range_from: 75
+                range_to: 101
+                red: 100%
+                green: 100%
+                blue: 0%
+
+interval:
+  - interval: 1s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(display_active);'
+          then:
+            - script.execute: update_display

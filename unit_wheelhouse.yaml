@@ -1,0 +1,54 @@
+substitutions:
+  esphome_name: wheelhouse
+  wifi_ip: 192.168.0.27
+
+packages:
+  common: !include common/base_sensor.yaml
+
+output:
+  - platform: esp8266_pwm
+    pin: D5
+    frequency: 1000 Hz
+    id: wheelhouse_main_pwm
+
+light:
+  - platform: monochromatic
+    name: "Wheelhouse main light"
+    id: wheelhouse_main_light
+    output: wheelhouse_main_pwm
+
+  - platform: neopixelbus
+    type: GRB
+    variant: WS2812X
+    pin: D1
+    num_leds: 102 # Adjusted for separator LEDs
+    name: "Wheelhouse main LED strip"
+    id: wheelhouse_main_led_strip
+    default_transition_length: 0s # Prevent fading
+    effects:
+      - addressable_color_wipe:
+          name: Alarm effect
+          colors:
+            - red: 100%
+              green: 0%
+              blue: 0%
+              num_leds: 5
+              gradient: true
+            - red: 0%
+              green: 0%
+              blue: 0%
+              num_leds: 10
+          add_led_interval: 50ms
+          reverse: false
+      - addressable_twinkle:
+          name: Stars effect
+      - addressable_flicker:
+          name: Rain effect
+          update_interval: 16ms
+          intensity: 15%
+
+binary_sensor:
+  - platform: gpio
+    pin: D2
+    name: "Wheelhouse PIR"
+    device_class: motion
